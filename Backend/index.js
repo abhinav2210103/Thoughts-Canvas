@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express');
 const { connectMongoDB } = require('./connection');
 const cookieParser = require('cookie-parser');
@@ -7,9 +8,9 @@ const topicRouter = require('./routes/topic');
 const { checkForAuthenticationCookie } = require('./middlewares/authentication');
 
 const app = express();
-const PORT = 8001;
+const PORT = process.env.PORT || 8000;
 
-connectMongoDB('mongodb://localhost:27017/blogs').then(() => console.log('MongoDB Connected'));
+connectMongoDB(process.env.MONGO_URL).then((e) => console.log('MongoDB Connected'));
 
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
