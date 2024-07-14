@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const userRouter = require('./routes/user');
 const blogRouter = require('./routes/blog');
 const topicRouter = require('./routes/topic');
+const adminRouter = require('./routes/admin')
 const { checkForAuthenticationCookie } = require('./middlewares/authentication');
 
 const app = express();
@@ -20,5 +21,6 @@ app.use(express.json());
 app.use('/user', userRouter);
 app.use('/blog', blogRouter);
 app.use('/topic', topicRouter);
+app.use('/admin',adminRouter);
 
 app.listen(PORT, () => console.log(`Server is started at ${PORT}`));
