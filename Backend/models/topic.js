@@ -12,7 +12,10 @@ const topicSchema = new mongoose.Schema({
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user'
-    }
+    },
+    imageUrl: {
+        type: String,
+    },
 }, { timestamps: true });
 
 const Topic = mongoose.model('Topic', topicSchema);
