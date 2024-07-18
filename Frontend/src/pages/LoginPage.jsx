@@ -31,7 +31,7 @@ const LoginComponent = () => {
       }
       const gRecaptchatoken = await executeRecaptcha('Login');
       const response = await axios.post('http://localhost:8001/user/signin', { email, password , gRecaptchatoken});
-      console.log('Login successful:', response.data);
+      console.log(response.data);
       setEmail('');
       setPassword('');
     } catch (error) {
