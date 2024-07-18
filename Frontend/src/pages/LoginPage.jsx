@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import {
+  GoogleReCaptchaProvider,
+  useGoogleReCaptcha
+} from 'react-google-recaptcha-v3';
+
+const recaptchaKey = process.env.RECAPTCHA_SITE_KEY || "";
 
 function LoginPage () {
   return (
-    <LoginComponent/>
+    <GoogleReCaptchaProvider reCaptchaKey={recaptchaKey ?? "NOT DEFINED"}
+    scriptProps={{ async: true }}>
+     <LoginComponent/>
+  </GoogleReCaptchaProvider>
   )
 }
-
 
 const LoginComponent = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +23,12 @@ const LoginComponent = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8001/user/signin', { email, password });
+      if (!executeRecaptcha) {
+        console.log('Execute recaptcha not yet available');
+        return;
+      }
+      const gRecaptchatoken = await executeRecaptcha('Login');
+      const response = await axios.post('http://localhost:8001/user/signin', { email, password , gRecaptchatoken});
       console.log('Login successful:', response.data);
       setEmail('');
       setPassword('');
@@ -36,7 +49,7 @@ const LoginComponent = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className='border-4'
-            required
+            requiredy
           />
         </div>
         <div className='mt-4'>
