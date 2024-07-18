@@ -1,5 +1,6 @@
 require('dotenv').config()
 const express = require('express');
+const cors = require('cors');
 const { connectMongoDB } = require('./connection');
 const cookieParser = require('cookie-parser');
 const userRouter = require('./routes/user');
@@ -13,6 +14,11 @@ const PORT = process.env.PORT || 8000;
 
 connectMongoDB(process.env.MONGO_URL).then((e) => console.log('MongoDB Connected'));
 
+app.use(cors({
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(checkForAuthenticationCookie('token'));

@@ -16,7 +16,7 @@ async function handleUserSignUp(req, res) {
 }
 
 async function handleUserSignIn(req, res) {
-  const { email, password } = req.body;
+  const { email, password , gRecaptchaToken} = req.body;
   try {
     const token = await User.matchPasswordAndGenerateToken(email, password);
     console.log('Token', token);
