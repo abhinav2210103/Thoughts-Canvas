@@ -1,5 +1,5 @@
 const User = require('../models/users');
-
+const {verifyRecaptchaToken} = require('../utils/RecaptchaToken.util')
 async function handleUserSignUp(req, res) {
   const { fullName, email, password } = req.body;
   try {
@@ -16,8 +16,13 @@ async function handleUserSignUp(req, res) {
 }
 
 async function handleUserSignIn(req, res) {
-  const { email, password , gRecaptchaToken} = req.body;
+  const { email, password , gRecaptchatoken} = req.body;
   try {
+    const reCaptcharesponse = await verifyRecaptchaToken(gRecaptchatoken);
+    if (!reCaptcharesponse.success || reCaptcharesponse.score <= 0.5) {
+      console.error('ReCaptcha verification failed:', reCaptcharesponse);
+      return res.status(403).json({ error: 'ReCaptcha verification failed' });
+    }
     const token = await User.matchPasswordAndGenerateToken(email, password);
     console.log('Token', token);
     return res.cookie('token', token).json({ msg: 'User Logged In' });

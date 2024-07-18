@@ -5,7 +5,7 @@ import {
   useGoogleReCaptcha
 } from 'react-google-recaptcha-v3';
 
-const recaptchaKey = process.env.RECAPTCHA_SITE_KEY || "";
+const recaptchaKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || "";
 
 function LoginPage () {
   return (
@@ -19,6 +19,8 @@ function LoginPage () {
 const LoginComponent = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
