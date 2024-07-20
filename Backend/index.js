@@ -8,12 +8,13 @@ const blogRouter = require('./routes/blog');
 const topicRouter = require('./routes/topic');
 const adminRouter = require('./routes/admin')
 const { checkForAuthenticationCookie } = require('./middlewares/authentication');
+const {rateLimit} = require('./middlewares/rateLimit');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-connectMongoDB(process.env.MONGO_URL).then((e) => console.log('MongoDB Connected'));
 
+connectMongoDB(process.env.MONGO_URL).then((e) => console.log('MongoDB Connected'));
 app.use(cors({
     origin: 'http://localhost:5173',
     methods: ['GET', 'POST'],
@@ -25,7 +26,8 @@ app.use(cookieParser());
 app.use(checkForAuthenticationCookie('token'));
 app.use(express.json());
 
-app.use('/user', userRouter);
+
+app.use('/user',userRouter);
 app.use('/blog', blogRouter);
 app.use('/topic', topicRouter);
 app.use('/admin',adminRouter);
