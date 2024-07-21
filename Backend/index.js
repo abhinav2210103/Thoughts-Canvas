@@ -8,11 +8,9 @@ const blogRouter = require('./routes/blog');
 const topicRouter = require('./routes/topic');
 const adminRouter = require('./routes/admin')
 const { checkForAuthenticationCookie } = require('./middlewares/authentication');
-const {rateLimit} = require('./middlewares/rateLimit');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
-
 
 connectMongoDB(process.env.MONGO_URL).then((e) => console.log('MongoDB Connected'));
 app.use(cors({

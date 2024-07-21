@@ -27,7 +27,15 @@ const userSchema = new Schema({
         type:String,
         enum : ["USER","ADMIN"],
         default:"USER",
-    }
+    },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
+    verificationToken: {
+        token: String,
+        expiration: Date,
+    },
 },{timestamps:true});
 
 userSchema.pre("save",function(next){
