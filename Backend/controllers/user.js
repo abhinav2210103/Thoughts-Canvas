@@ -36,7 +36,7 @@ async function handleUserSignUp(req, res) {
                         }
                     });
                     const verificationLink = `http://localhost:8001/user/verifyEmail?token=${newToken}`;
-                    await sendVerificationEmail(email, verificationLink);
+                    await sendVerificationEmail(email, verificationLink,fullName);
                     return res.status(200).json({
                         message: 'Verification email resent. Please check your inbox.'
                     });
@@ -62,7 +62,7 @@ async function handleUserSignUp(req, res) {
         });
 
         await newUser.save();
-        await sendVerificationEmail(email, verificationLink);
+        await sendVerificationEmail(email, verificationLink,fullName);
 
         res.status(201).json({
             success: true,

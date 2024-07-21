@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
-
-const sendVerificationEmail = async (email, verificationLink) => {
+const {mailTemplate} = require('../constants/mailTemplate')
+const sendVerificationEmail = async (email, verificationLink , fullName) => {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -9,17 +9,13 @@ const sendVerificationEmail = async (email, verificationLink) => {
             pass: process.env.EMAIL_PASS,
         },
     });
-
+    const htmlcontent = mailTemplate(verificationLink,fullName);
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
-        subject: 'Email Verification',
-        html: `<p>Hello,</p>
-               <p>Thank you for signing up. Please verify your email by clicking the link below:</p>
-               <a href="${verificationLink}">Verify Email</a>
-               <p>If you did not sign up for this account, please ignore this email.</p>
-               <p>Best regards,<br>Team Thoughts Canvas</p>`
-    };
+        subject: 'Verify Your Email for Thoughts Canvas',
+        html: htmlcontent,
+        };
 
     try {
         await transporter.sendMail(mailOptions);
