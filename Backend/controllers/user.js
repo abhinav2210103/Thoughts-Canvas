@@ -6,62 +6,72 @@ const rateLimiter = require('../utils/rateLimiter');
 const { sendVerificationEmail } = require('../utils/emailverifiy.util');
 
 async function handleUserSignUp(req, res) {
-  const { fullName, email, password } = req.body;
-  
-  try {
-      const existingUser = await User.findOne({ email });
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    try {
+        const rateLimit = await rateLimiter(ip, 3, 60);
+        if (!rateLimit.allowed) {
+            return res.status(503).json({
+                response: 'Error',
+                callsMade: rateLimit.requests,
+                msg: 'Too many calls made'
+            });
+        }
 
-      if (existingUser) {
-          if (existingUser.isVerified) {
-              return res.status(400).json({ message: 'Email already in use' });
-          } else {
-              if (existingUser.verificationToken.expiration < Date.now()) {
-                  const newToken = crypto.randomBytes(20).toString('hex');
-                  await User.updateOne({ email: email }, {
-                      $set: {
-                          verificationToken: {
-                              token: newToken,
-                              expiration: Date.now() + 24 * 60 * 60 * 1000,
-                          }
-                      }
-                  });
-                  const verificationLink = `http://localhost:8001/user/verifyEmail?token=${newToken}`;
-                  await sendVerificationEmail(email, verificationLink);
-                  return res.status(200).json({
-                      message: 'Verification email resent. Please check your inbox.'
-                  });
-              } else {
-                  return res.status(400).json({
-                      message: 'Verification link already sent. Please check your email.'
-                  });
-              }
-          }
-      }
+        const { fullName, email, password } = req.body;
 
-      const token = crypto.randomBytes(20).toString('hex');
-      const verificationLink = `http://localhost:8001/user/verifyEmail?token=${token}`;
-      const newUser = new User({
-          fullName,
-          email,
-          password,
-          isVerified: false,
-          verificationToken: {
-              token,
-              expiration: Date.now() + 24 * 60 * 60 * 1000,
-          }
-      });
+        const existingUser = await User.findOne({ email });
 
-      await newUser.save();
-      await sendVerificationEmail(email, verificationLink);
+        if (existingUser) {
+            if (existingUser.isVerified) {
+                return res.status(400).json({ message: 'Email already in use' });
+            } else {
+                if (existingUser.verificationToken.expiration < Date.now()) {
+                    const newToken = crypto.randomBytes(20).toString('hex');
+                    await User.updateOne({ email: email }, {
+                        $set: {
+                            verificationToken: {
+                                token: newToken,
+                                expiration: Date.now() + 24 * 60 * 60 * 1000,
+                            }
+                        }
+                    });
+                    const verificationLink = `http://localhost:8001/user/verifyEmail?token=${newToken}`;
+                    await sendVerificationEmail(email, verificationLink);
+                    return res.status(200).json({
+                        message: 'Verification email resent. Please check your inbox.'
+                    });
+                } else {
+                    return res.status(400).json({
+                        message: 'Verification link already sent. Please check your email.'
+                    });
+                }
+            }
+        }
 
-      res.status(201).json({
-          success: true,
-          message: 'User created successfully. Please verify your email.',
-      });
-  } catch (error) {
-      console.error('Error during user sign-up:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
-  }
+        const token = crypto.randomBytes(20).toString('hex');
+        const verificationLink = `http://localhost:8001/user/verifyEmail?token=${token}`;
+        const newUser = new User({
+            fullName,
+            email,
+            password,
+            isVerified: false,
+            verificationToken: {
+                token,
+                expiration: Date.now() + 24 * 60 * 60 * 1000,
+            }
+        });
+
+        await newUser.save();
+        await sendVerificationEmail(email, verificationLink);
+
+        res.status(201).json({
+            success: true,
+            message: 'User created successfully. Please verify your email.',
+        });
+    } catch (error) {
+        console.error('Error during user sign-up:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 }
 
 async function handleUserSignIn(req, res) {
