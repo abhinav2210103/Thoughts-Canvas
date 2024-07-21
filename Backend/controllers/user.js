@@ -76,20 +76,32 @@ async function handleUserSignUp(req, res) {
 
 async function handleUserSignIn(req, res) {
     const { email, password, gRecaptchatoken } = req.body;
+
     try {
-        const reCaptcharesponse = await verifyRecaptchaToken(gRecaptchatoken);
-        if (!reCaptcharesponse.success || reCaptcharesponse.score <= 0.5) {
-            console.error('ReCaptcha verification failed:', reCaptcharesponse);
+        const reCaptchaResponse = await verifyRecaptchaToken(gRecaptchatoken);
+
+        if (!reCaptchaResponse.success || reCaptchaResponse.score <= 0.5) {
+            console.error('ReCaptcha verification failed:', reCaptchaResponse);
             return res.status(403).json({ error: 'ReCaptcha verification failed' });
         }
+
         const token = await User.matchPasswordAndGenerateToken(email, password);
+        
+        const user = await User.findOne({ email });
+
+        if (!user.isVerified) {
+            return res.status(403).json({ error: 'Email not verified. Please check your inbox for the verification email or request a new one.' });
+        }
+
         console.log('Token', token);
-        return res.cookie('token', token).json({ msg: 'User Logged In' });
+        return res.cookie('token', token, { httpOnly: true }).json({ msg: 'User Logged In' });
+
     } catch (error) {
         console.error('Error during user sign-in:', error);
         return res.status(401).json({ error: 'Invalid Email or Password' });
     }
 }
+
 
 async function handleUserLogout(req, res) {
     return res.clearCookie('token').json({ msg: 'User Logged Out' });

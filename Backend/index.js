@@ -24,9 +24,9 @@ app.use(cookieParser());
 app.use(checkForAuthenticationCookie('token'));
 app.use(express.json());
 
-app.use('/user',userRouter);
-app.use('/blog', blogRouter);
+app.use('/user', userRouter);
+app.use('/blog', blogRouter); 
 app.use('/topic', topicRouter);
-app.use('/admin',adminRouter);
+app.use('/admin', adminRouter);
 
 app.listen(PORT, () => console.log(`Server is started at ${PORT}`));
