@@ -107,16 +107,16 @@ async function handleUserLogout(req, res) {
     return res.clearCookie('token').json({ msg: 'User Logged Out' });
 }
 
-async function resetRequestCount(req, res) {
-    const ip = req.body.ip;
-    try {
-        await redis.del(ip);
-        return res.json({ msg: `Request count for IP ${ip} has been reset.` });
-    } catch (error) {
-        console.error('Error resetting request count:', error);
-        return res.status(500).json({ error: 'Internal Server Error' });
-    }
-}
+// async function resetRequestCount(req, res) {
+//     const ip = req.body.ip;
+//     try {
+//         await redis.del(ip);
+//         return res.json({ msg: `Request count for IP ${ip} has been reset.` });
+//     } catch (error) {
+//         console.error('Error resetting request count:', error);
+//         return res.status(500).json({ error: 'Internal Server Error' });
+//     }
+// }
 
 async function verifyEmail(req, res) {
     const { token } = req.query;
@@ -143,6 +143,5 @@ module.exports = {
     handleUserSignIn,
     handleUserSignUp,
     handleUserLogout,
-    resetRequestCount,
     verifyEmail
 };

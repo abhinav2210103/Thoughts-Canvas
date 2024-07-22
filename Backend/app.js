@@ -13,6 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 
 connectMongoDB(process.env.MONGO_URL).then((e) => console.log('MongoDB Connected'));
+
 app.use(cors({
     origin: 'http://localhost:5173',
     methods: ['GET', 'POST'],
