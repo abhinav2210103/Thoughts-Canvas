@@ -5,6 +5,8 @@ const { verifyRecaptchaToken } = require('../utils/RecaptchaToken.util');
 const rateLimiter = require('../utils/rateLimiter');
 const { sendVerificationEmail } = require('../utils/emailverifiy.util');
 
+const baseURL = process.env.BASE_URL || 'http://localhost:8001';
+
 async function handleUserSignUp(req, res) {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     try {
@@ -35,7 +37,7 @@ async function handleUserSignUp(req, res) {
                             }
                         }
                     });
-                    const verificationLink = `http://localhost:8001/user/verifyEmail?token=${newToken}`;
+                    const verificationLink = `${baseURL}/user/verifyEmail?token=${newToken}`;
                     await sendVerificationEmail(email, verificationLink,fullName);
                     return res.status(200).json({
                         message: 'Verification email resent. Please check your inbox.'
@@ -49,7 +51,7 @@ async function handleUserSignUp(req, res) {
         }
 
         const token = crypto.randomBytes(20).toString('hex');
-        const verificationLink = `http://localhost:8001/user/verifyEmail?token=${token}`;
+        const verificationLink = `${baseURL}/user/verifyEmail?token=${newToken}`
         const newUser = new User({
             fullName,
             email,
