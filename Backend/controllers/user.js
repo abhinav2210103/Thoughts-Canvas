@@ -6,7 +6,6 @@ const rateLimiter = require('../utils/rateLimiter');
 const { sendVerificationEmail } = require('../utils/emailverifiy.util');
 
 const baseURL = process.env.BASE_URL || 'http://localhost:8001';
-
 async function handleUserSignUp(req, res) {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     try {
@@ -38,7 +37,7 @@ async function handleUserSignUp(req, res) {
                         }
                     });
                     const verificationLink = `${baseURL}/user/verifyEmail?token=${newToken}`;
-                    await sendVerificationEmail(email, verificationLink,fullName);
+                    await sendVerificationEmail(email, verificationLink, fullName);
                     return res.status(200).json({
                         message: 'Verification email resent. Please check your inbox.'
                     });
@@ -51,7 +50,7 @@ async function handleUserSignUp(req, res) {
         }
 
         const token = crypto.randomBytes(20).toString('hex');
-        const verificationLink = `${baseURL}/user/verifyEmail?token=${newToken}`
+        const verificationLink = `${baseURL}/user/verifyEmail?token=${token}`;
         const newUser = new User({
             fullName,
             email,
@@ -64,7 +63,7 @@ async function handleUserSignUp(req, res) {
         });
 
         await newUser.save();
-        await sendVerificationEmail(email, verificationLink,fullName);
+        await sendVerificationEmail(email, verificationLink, fullName);
 
         res.status(201).json({
             success: true,
@@ -75,7 +74,6 @@ async function handleUserSignUp(req, res) {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }
-
 async function handleUserSignIn(req, res) {
     const { email, password, gRecaptchatoken } = req.body;
 
