@@ -19,9 +19,7 @@ async function handleUserSignUp(req, res) {
         }
 
         const { fullName, email, password } = req.body;
-
         const existingUser = await User.findOne({ email });
-
         if (existingUser) {
             if (existingUser.isVerified) {
                 return res.status(400).json({ message: 'Email already in use' });
