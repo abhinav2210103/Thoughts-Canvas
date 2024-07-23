@@ -9,14 +9,14 @@ const baseURL = 'http://localhost:8001';
 async function handleUserSignUp(req, res) {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     try {
-        // const rateLimit = await rateLimiter(ip, 3, 60);
-        // if (!rateLimit.allowed) {
-        //     return res.status(503).json({
-        //         response: 'Error',
-        //         callsMade: rateLimit.requests,
-        //         msg: 'Too many calls made'
-        //     });
-        // }
+        const rateLimit = await rateLimiter(ip, 3, 60);
+        if (!rateLimit.allowed) {
+            return res.status(503).json({
+                response: 'Error',
+                callsMade: rateLimit.requests,
+                msg: 'Too many calls made'
+            });
+        }
 
         const { fullName, email, password } = req.body;
         const existingUser = await User.findOne({ email });
@@ -76,12 +76,12 @@ async function handleUserSignIn(req, res) {
     const { email, password, gRecaptchatoken } = req.body;
 
     try {
-        const reCaptchaResponse = await verifyRecaptchaToken(gRecaptchatoken);
+        // const reCaptchaResponse = await verifyRecaptchaToken(gRecaptchatoken);
 
-        if (!reCaptchaResponse.success || reCaptchaResponse.score <= 0.5) {
-            console.error('ReCaptcha verification failed:', reCaptchaResponse);
-            return res.status(403).json({ error: 'ReCaptcha verification failed' });
-        }
+        // if (!reCaptchaResponse.success || reCaptchaResponse.score <= 0.5) {
+        //     console.error('ReCaptcha verification failed:', reCaptchaResponse);
+        //     return res.status(403).json({ error: 'ReCaptcha verification failed' });
+        // }
 
         const token = await User.matchPasswordAndGenerateToken(email, password);
         

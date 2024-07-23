@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const blogSchema = new mongoose.Schema({
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'user',
+    ref: 'user', 
     required: true,
   },
   topic: {
@@ -18,12 +18,8 @@ const blogSchema = new mongoose.Schema({
   suggestedTopic: {
     type: String,
   },
-  likesCount: {
-    type: Number,
-    default: 0,
-  },
 }, { timestamps: true });
 
-const Blog = mongoose.model('blog', blogSchema);
+const Blog = mongoose.model('blog',blogSchema);
 
 module.exports = Blog;
