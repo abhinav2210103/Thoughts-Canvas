@@ -48,9 +48,57 @@ async function handleGetAllBlogs(req, res) {
   }
 }
 
+ async function handleLikeCount (req, res)  {
+  try {
+    const blogId = req.params.id;
+    const blog = await Blog.findById(blogId);
+
+    if (!blog) return res.status(404).json({ message: 'Blog not found' });
+
+    blog.likesCount += 1;
+    await blog.save();
+
+    res.status(200).json({ message: 'Blog liked successfully', likesCount: blog.likesCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+async function handleGetAllLike (req, res) {
+  try {
+    const blogId = req.params.id;
+    const blog = await Blog.findById(blogId);
+
+    if (!blog) return res.status(404).json({ message: 'Blog not found' });
+
+    res.status(200).json({ likesCount: blog.likesCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+async function handleUnLikeCount (req, res) {
+  try {
+    const blogId = req.params.id;
+    const blog = await Blog.findById(blogId)
+    if (!blog) return res.status(404).json({ message: 'Blog not found' });
+    if (blog.likesCount > 0) {
+      blog.likesCount -= 1;
+      await blog.save();
+    }
+    res.status(200).json({ message: 'Blog unliked successfully', likesCount: blog.likesCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 
 
 module.exports = {
   handleAddNewBlog,
   handleGetAllBlogs,
+  handleLikeCount,
+  handleUnLikeCount,
+  handleGetAllLike
 };

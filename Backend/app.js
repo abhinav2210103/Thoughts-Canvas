@@ -13,7 +13,14 @@ const { checkForAuthenticationCookie } = require('./middlewares/authentication')
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-connectMongoDB(process.env.MONGO_URL).then((e) => console.log('MongoDB Connected'));
+connectMongoDB(process.env.MONGO_URL)
+  .then(() => {
+    console.log('MongoDB Connected');
+  })
+  .catch((error) => {
+    console.error('Error connecting to MongoDB:', error.message);
+    process.exit(1);
+  });
 
 app.use(cors({
     origin: 'http://localhost:5173',
