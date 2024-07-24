@@ -1,15 +1,24 @@
 const User = require('../models/users');
 const { sendVerificationEmail } = require('../utils/emailverifiy.util');
+const rateLimiter = require('../utils/rateLimiter');
 const crypto = require('crypto');
-
 
 const baseURL = process.env.BASE_URL || 'http://localhost:8001';
 
 async function handleAdminSignUp(req, res) {
-  const { fullName, email, password } = req.body;
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
   try {
+    const rateLimit = await rateLimiter(ip, 3, 60);
+    if (!rateLimit.allowed) {
+        return res.status(503).json({
+            response: 'Error',
+            callsMade: rateLimit.requests,
+            msg: 'Too many calls made'
+        });
+    }
+    const { fullName, email, password } = req.body;
     const existingUser = await User.findOne({ email });
-    
     if (existingUser) {
       if (existingUser.isVerified) {
         return res.status(400).json({ message: 'Email already in use' });
