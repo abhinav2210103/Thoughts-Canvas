@@ -32,9 +32,7 @@ app.use(cookieParser());
 app.use(checkForAuthenticationCookie("token"));
 app.use(express.json());
 
-app.use("/", (req, res) => {
-  return res.send("Hello World");
-});
+
 app.use("/user", userRouter);
 app.use("/blog", blogRouter);
 app.use("/topic", topicRouter);
