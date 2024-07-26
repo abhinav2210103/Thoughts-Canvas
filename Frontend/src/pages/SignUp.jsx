@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+const apiBaseUrl = process.env.REACT_APP_BASE_URL || "";
+
 function SignUp() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -9,7 +11,7 @@ function SignUp() {
   const handleSignUp = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8001/user/signup', {
+      const response = await axios.post(`${apiBaseUrl}/user/signup`, {
         fullName,
         email,
         password,

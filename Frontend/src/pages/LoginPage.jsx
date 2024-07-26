@@ -4,23 +4,25 @@ import {
   GoogleReCaptchaProvider,
   useGoogleReCaptcha
 } from 'react-google-recaptcha-v3';
+import { useNavigate } from 'react-router-dom';
 
 const recaptchaKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || "";
+const apiBaseUrl = process.env.REACT_APP_BASE_URL || "";
 
-function LoginPage () {
+function LoginPage() {
   return (
     <GoogleReCaptchaProvider reCaptchaKey={recaptchaKey ?? "NOT DEFINED"}
-    scriptProps={{ async: true }}>
-     <LoginComponent/>
-  </GoogleReCaptchaProvider>
-  )
+      scriptProps={{ async: true }}>
+      <LoginComponent />
+    </GoogleReCaptchaProvider>
+  );
 }
 
 const LoginComponent = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { executeRecaptcha } = useGoogleReCaptcha();
-
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -29,11 +31,12 @@ const LoginComponent = () => {
         console.log('Execute recaptcha not yet available');
         return;
       }
-      const gRecaptchatoken = await executeRecaptcha('Login');
-      const response = await axios.post('http://localhost:8001/user/signin', { email, password , gRecaptchatoken});
+      const gRecaptchaToken = await executeRecaptcha('Login');
+      const response = await axios.post(`${apiBaseUrl}/admin/signin`, { email, password, gRecaptchaToken }, { withCredentials: true });
       console.log(response.data);
       setEmail('');
       setPassword('');
+      navigate('/home');
     } catch (error) {
       console.error('Login error:', error);
     }
@@ -51,7 +54,7 @@ const LoginComponent = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className='border-4'
-            requiredy
+            required
           />
         </div>
         <div className='mt-4'>
