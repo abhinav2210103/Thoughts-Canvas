@@ -34,7 +34,7 @@ async function handleUpdateCurrentTopic(req, res) {
       if (!topic) {
         return res.status(404).json({ error: "No current topic found" });
       }
-      const response = { name: topic.TopicName, topic };
+      const response = { name: topic.TopicName,  imageUrl: topic.imageUrl || null , topic };
       topicCache.set("currentTopic", response);
       return res.json(response);
     } catch (error) {
@@ -86,7 +86,7 @@ async function handleUpdateCurrentTopic(req, res) {
   
       topic.imageUrl = cloudinaryResponse.secure_url;
       await topic.save();
-  
+      topicCache.del("currentTopic");
       return res.status(200).json({ message: "Image uploaded successfully", topic });
     } catch (err) {
       console.error(err);

@@ -4,8 +4,6 @@ const secret = process.env.SECRET_KEY_TOKEN;
 function createTokenForUser(user) {
   const payload = {
     _id: user._id,
-    email: user.email,
-    profileImageUrl: user.profileImageUrl,
     role: user.role,
   };
   const token = JWT.sign(payload, secret);
