@@ -10,7 +10,7 @@ const baseURL = process.env.BASE_URL || 'http://localhost:8001';
 async function handleUserSignUp(req, res) {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     try {
-        const rateLimit = await rateLimiter(ip, 3, 60);
+        const rateLimit = await rateLimiter(ip, 3, 120);
         if (!rateLimit.allowed) {
             return res.status(503).json({
                 response: 'Error',

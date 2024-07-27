@@ -2,6 +2,9 @@ const Blog = require("../models/blog");
 const User = require("../models/users");
 const Topic = require("../models/topic");
 const { uploadOnCloudinary } = require("../utils/cloudinary.util")
+const NodeCache = require("node-cache");
+
+const topicCache = new NodeCache({ stdTTL: 6000 }); 
 
 async function handleUpdateCurrentTopic(req, res) {
     const { TopicName } = req.body;
@@ -9,6 +12,7 @@ async function handleUpdateCurrentTopic(req, res) {
     try {
       await Topic.updateOne({ isCurrent: true }, { isCurrent: false });
       const newTopic = await Topic.create({ TopicName, isCurrent: true, createdBy: userId });
+      topicCache.del("currentTopic");
       return res.json({ msg: "Current Topic Updated" , id: newTopic._id});
     } catch (error) {
       console.error("Error updating current topic:", error);
@@ -18,23 +22,27 @@ async function handleUpdateCurrentTopic(req, res) {
   
   async function handleGetCurrentTopic(req, res) {
     try {
-      const topic = await Topic.findOne({ isCurrent: true }).populate({
-        path: "createdBy",
-        select: "fullName",
-      });
-      const topicId = topic._id;
-      const userId = req.user._id;
-      console.log(topicId);
+      const cachedTopic = topicCache.get("currentTopic");
+      if (cachedTopic) {
+        return res.json(cachedTopic);
+      }
+  
+      const topic = await Topic.findOne({ isCurrent: true })
+        .populate({ path: "createdBy", select: "fullName" })
+        .lean();
+  
       if (!topic) {
         return res.status(404).json({ error: "No current topic found" });
       }
-      const name = topic.TopicName;
-      return res.json({ name, topic });
+      const response = { name: topic.TopicName, topic };
+      topicCache.set("currentTopic", response);
+      return res.json(response);
     } catch (error) {
       console.error("Error fetching current topic:", error);
       return res.status(500).json({ error: "Failed to fetch current topic" });
     }
   }
+  
   
   async function handlegetAllTopics(req,res) {
     try {
@@ -50,7 +58,7 @@ async function handleUpdateCurrentTopic(req, res) {
 
   async function handleUploadImage (req, res) {
     try {
-      const { topicId } = req.body; // Get topicId from the request body
+      const { topicId } = req.body; 
       if (!topicId) {
         return res.status(400).json({ message: "Topic ID is required" });
       }

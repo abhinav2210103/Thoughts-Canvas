@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const { connectMongoDB } = require("./connection");
 const cookieParser = require("cookie-parser");
+const compression = require('compression');
 const userRouter = require("./routes/user");
 const blogRouter = require("./routes/blog");
 const topicRouter = require("./routes/topic");
@@ -24,6 +25,7 @@ app.use(
     origin: "http://localhost:5173",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
