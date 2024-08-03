@@ -12,12 +12,7 @@ const topicSuggestionSchema = new mongoose.Schema({
     },
     imageUrl: {
         type: String,
-    },
-    status: {
-        type: String,
-        enum: ['PENDING', 'APPROVED', 'REJECTED'],
-        default: 'PENDING',
-    },
+    }
 }, { timestamps: true });
 
 const TopicSuggestion = mongoose.model('TopicSuggestion', topicSuggestionSchema);

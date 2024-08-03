@@ -1,5 +1,6 @@
 const express = require('express');
 const {handleUpdateCurrentTopic,handleGetCurrentTopic,handlegetAllTopics,handleUploadImage} = require("../controllers/topic");
+const {}
 const {checkAdminRole} = require("../middlewares/role")
 const upload = require("../middlewares/multer")
 const router = express.Router();
