@@ -10,6 +10,6 @@ router.post('/signin',  handleUserSignIn);
 router.post('/logout', handleUserLogout);
 // router.post('/reset', resetRequestCount);
 router.get('/verifyEmail',verifyEmail);
-router.get('/profile', checkForAuthenticationCookie("token"),handleGetUserProfile);
+router.get('/profile',checkForAuthenticationCookie("token"),handleGetUserProfile);
 
 module.exports = router;

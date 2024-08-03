@@ -23,10 +23,6 @@ const blogSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  suggestedTopic: {
-    type: String,
-  },
- 
 }, { timestamps: true });
 
 const Blog = mongoose.model('blog', blogSchema);

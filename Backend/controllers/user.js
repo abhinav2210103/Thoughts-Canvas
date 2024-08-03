@@ -142,21 +142,36 @@ async function verifyEmail(req, res) {
 
 async function handleGetUserProfile(req, res) {
     try {
-        const userId = req.user._id; 
-        const user = await User.findById(userId);
-        if (!user) return res.status(404).json({ message: 'User not found' });
-        const blogs = await Blog.find({ createdBy: user._id });
+        const userId = req.user._id;
+        const user = await User.findById(userId).lean();
+        if (!user) {
+            console.log('User not found');
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const blogs = await Blog.find({ createdBy: user._id }).lean();
         const totalLikes = blogs.reduce((acc, blog) => acc + blog.likesCount, 0);
+        const totalBlogs = await Blog.countDocuments({ createdBy: user._id }).exec();
+        
         user.totalLikes = totalLikes;
-        res.status(200).json({
+        user.totalBlogs = totalBlogs;
+        await User.updateOne({ _id: userId }, { $set: { totalLikes, totalBlogs } });
+
+        const userProfile = {
             email: user.email,
             fullName: user.fullName,
-            totalLikes: user.totalLikes
-        });
+            totalLikes: totalLikes,
+            totalBlogs: totalBlogs
+        };
+
+        res.status(200).json(userProfile);
+
     } catch (error) {
+        console.error('Error:', error);
         res.status(500).json({ message: error.message });
     }
 }
+
 
 module.exports = {
     handleUserSignIn,

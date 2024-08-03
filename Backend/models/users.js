@@ -36,6 +36,10 @@ const userSchema = new Schema({
         type: Number,
         default: 0,
     },
+    totalBlogs : {
+        type: Number,
+        default: 0,
+    },
 },{timestamps:true});
 
 userSchema.pre("save",function(next){

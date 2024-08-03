@@ -7,7 +7,7 @@ const blogCache = new NodeCache({ stdTTL: 200 });
 const likeCache = new NodeCache({ stdTTL: 200 }); 
 
 async function handleAddNewBlog(req, res) {
-  const { thoughts, suggestedTopic } = req.body;
+  const {thoughts} = req.body;
   const userId = req.user._id;
 
   try {
@@ -22,7 +22,6 @@ async function handleAddNewBlog(req, res) {
       topic: currentTopic._id,
       topicName: currentTopic.TopicName,
       thoughts,
-      suggestedTopic,
     });
     
     blogCache.del("allBlogs");
