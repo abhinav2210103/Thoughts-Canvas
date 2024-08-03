@@ -4,7 +4,7 @@ function checkForAuthenticationCookie(cookieName) {
   return (req, res, next) => {
     const tokenCookieValue = req.cookies[cookieName];
     if (!tokenCookieValue) {
-      return next();
+      return res.status(401).json({ message: 'Unauthorized' });
     }
     try {
       const userPayload = validateToken(tokenCookieValue);
@@ -12,7 +12,7 @@ function checkForAuthenticationCookie(cookieName) {
       next();
     } catch (error) {
       console.error('Invalid Token:', error);
-      return next();
+      return res.status(401).json({ message: 'Invalid Token' });
     }
   };
 }

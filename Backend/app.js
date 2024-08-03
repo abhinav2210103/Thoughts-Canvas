@@ -31,11 +31,11 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(checkForAuthenticationCookie("token"));
 app.use(express.json());
 
 
 app.use("/user", userRouter);
+app.use(checkForAuthenticationCookie("token"));
 app.use("/blog", blogRouter);
 app.use("/topic", topicRouter);
 app.use("/admin", adminRouter);

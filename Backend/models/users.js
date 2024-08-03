@@ -32,6 +32,10 @@ const userSchema = new Schema({
         token: String,
         expiration: Date,
     },
+    totalLikes: {
+        type: Number,
+        default: 0,
+    },
 },{timestamps:true});
 
 userSchema.pre("save",function(next){

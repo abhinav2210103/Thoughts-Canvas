@@ -1,6 +1,7 @@
 require('dotenv').config();
 const crypto = require('crypto');
 const User = require('../models/users');
+const Blog = require('../models/blog')
 const { verifyRecaptchaToken } = require('../utils/RecaptchaToken.util');
 const rateLimiter = require('../utils/rateLimiter');
 const { sendVerificationEmail } = require('../utils/emailverifiy.util');
@@ -139,9 +140,28 @@ async function verifyEmail(req, res) {
     }
 }
 
+async function handleGetUserProfile(req, res) {
+    try {
+        const userId = req.user._id; 
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        const blogs = await Blog.find({ createdBy: user._id });
+        const totalLikes = blogs.reduce((acc, blog) => acc + blog.likesCount, 0);
+        user.totalLikes = totalLikes;
+        res.status(200).json({
+            email: user.email,
+            fullName: user.fullName,
+            totalLikes: user.totalLikes
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 module.exports = {
     handleUserSignIn,
     handleUserSignUp,
     handleUserLogout,
-    verifyEmail
+    verifyEmail,
+    handleGetUserProfile,
 };

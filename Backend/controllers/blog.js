@@ -7,7 +7,7 @@ const blogCache = new NodeCache({ stdTTL: 200 });
 const likeCache = new NodeCache({ stdTTL: 200 }); 
 
 async function handleAddNewBlog(req, res) {
-  const { topicId, thoughts, suggestedTopic } = req.body;
+  const { thoughts, suggestedTopic } = req.body;
   const userId = req.user._id;
 
   try {
@@ -17,12 +17,6 @@ async function handleAddNewBlog(req, res) {
       return res.status(404).json({ error: "No current topic found" });
     }
 
-    if (currentTopic._id.toString() !== topicId) {
-      return res
-        .status(404)
-        .json({ error: "Current topic and entered topic do not match" });
-    }
-
     const blog = await Blog.create({
       createdBy: userId,
       topic: currentTopic._id,
@@ -30,6 +24,7 @@ async function handleAddNewBlog(req, res) {
       thoughts,
       suggestedTopic,
     });
+    
     blogCache.del("allBlogs");
     return res.json({ msg: "Blog entry added", blog });
   } catch (error) {
