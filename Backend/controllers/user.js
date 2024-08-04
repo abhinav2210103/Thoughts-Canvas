@@ -246,6 +246,14 @@ async function handleChangePassword(req, res) {
 async function handleForgotPassword(req, res) {
     const { email } = req.body;
     try {
+        const rateLimit = await rateLimiter(email, 3, 86400); // 3 requests per day (86400 seconds)
+        if (!rateLimit.allowed) {
+            return res.status(429).json({
+                response: 'Error',
+                callsMade: rateLimit.requests,
+                msg: 'Too many requests. Please try again later.'
+            });
+        }
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -267,7 +275,8 @@ async function handleForgotPassword(req, res) {
                 }
             }
         );
-        await sendPasswordResetEmail(email, otp);
+        const fullName = user.fullName;
+        await sendPasswordResetEmail(email, otp, fullName);
         res.status(200).json({
             message: 'Password reset email sent. Please check your inbox.'
         });
