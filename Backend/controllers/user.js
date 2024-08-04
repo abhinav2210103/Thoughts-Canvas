@@ -6,7 +6,8 @@ const Blog = require('../models/blog')
 const { verifyRecaptchaToken } = require('../utils/RecaptchaToken.util');
 const rateLimiter = require('../utils/rateLimiter');
 const { sendVerificationEmail } = require('../utils/emailverifiy.util');
-const { sendPasswordResetEmail } = require('../utils/otpverify.util')
+const { sendPasswordResetEmail } = require('../utils/otpverify.util');
+const rateLimiterEmail = require('../utils/rateLimiterEmail');
 
 const baseURL = process.env.BASE_URL || 'http://localhost:8001';
 
@@ -246,12 +247,12 @@ async function handleChangePassword(req, res) {
 async function handleForgotPassword(req, res) {
     const { email } = req.body;
     try {
-        const rateLimit = await rateLimiter(email, 3, 86400); // 3 requests per day (86400 seconds)
+        const rateLimit = await rateLimiterEmail(email, 3, 86400);
         if (!rateLimit.allowed) {
-            return res.status(429).json({
+            return res.status(503).json({
                 response: 'Error',
                 callsMade: rateLimit.requests,
-                msg: 'Too many requests. Please try again later.'
+                msg: 'Too many OTP requests'
             });
         }
         const user = await User.findOne({ email });
