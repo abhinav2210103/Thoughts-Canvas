@@ -8,8 +8,9 @@ const rateLimiter = require('../utils/rateLimiter');
 const { sendVerificationEmail } = require('../utils/emailverifiy.util');
 const { sendPasswordResetEmail } = require('../utils/otpverify.util');
 const rateLimiterEmail = require('../utils/rateLimiterEmail');
+const {emailVerificationTemplate} = require('../constants/emailVerificationTemplate');
 
-const baseURL = process.env.BASE_URL || 'http://localhost:8001';
+const baseURL = process.env.BASE_URL ||'http://localhost:8001';
 
 async function handleUserSignUp(req, res) {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -136,7 +137,7 @@ async function verifyEmail(req, res) {
             $unset: { verificationToken: 1 }
         });
 
-        res.status(200).json({ message: 'Email verified successfully!' });
+        res.status(200).send(emailVerificationTemplate(user.fullName));
     } catch (error) {
         console.error('Error verifying email:', error);
         res.status(500).json({ error: 'Internal Server Error' });
