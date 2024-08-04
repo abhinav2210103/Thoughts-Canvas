@@ -40,6 +40,10 @@ const userSchema = new Schema({
         type: Number,
         default: 0,
     },
+    passwordResetToken: {
+        otp: String,
+        expiration: Date,
+    },
 },{timestamps:true});
 
 userSchema.pre("save",function(next){

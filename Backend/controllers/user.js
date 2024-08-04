@@ -6,6 +6,7 @@ const Blog = require('../models/blog')
 const { verifyRecaptchaToken } = require('../utils/RecaptchaToken.util');
 const rateLimiter = require('../utils/rateLimiter');
 const { sendVerificationEmail } = require('../utils/emailverifiy.util');
+const { sendPasswordResetEmail } = require('../utils/otpverify.util')
 
 const baseURL = process.env.BASE_URL || 'http://localhost:8001';
 
@@ -242,6 +243,100 @@ async function handleChangePassword(req, res) {
     }
 }
 
+async function handleForgotPassword(req, res) {
+    const { email } = req.body;
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (user.passwordResetToken && user.passwordResetToken.expiration > Date.now()) {
+            return res.status(400).json({ message: 'OTP already sent. Please check your inbox or wait before requesting a new one.' });
+        }
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        const expiration = Date.now() + 15 * 60 * 1000;
+        await User.updateOne(
+            { email },
+            {
+                $set: {
+                    passwordResetToken: {
+                        otp,
+                        expiration
+                    }
+                }
+            }
+        );
+        await sendPasswordResetEmail(email, otp);
+        res.status(200).json({
+            message: 'Password reset email sent. Please check your inbox.'
+        });
+    } catch (error) {
+        console.error('Error sending password reset email:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+async function handleVerifyOtp(req, res) {
+    const { email, otp } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user || user.passwordResetToken.otp !== otp || user.passwordResetToken.expiration < Date.now()) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+
+        res.status(200).json({ message: 'OTP is valid' });
+    } catch (error) {
+        console.error('Error verifying OTP:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+async function handleResetPassword(req, res) {
+    const { email, otp, newPassword } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user || user.passwordResetToken.otp !== otp || user.passwordResetToken.expiration < Date.now()) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+
+        if (!newPassword) {
+            return res.status(400).json({ message: 'New password is required' });
+        }
+
+        const salt = crypto.randomBytes(16).toString('hex');
+        const hashedNewPassword = crypto.createHmac('sha256', salt)
+            .update(newPassword)
+            .digest('hex');
+
+        const hashedOldPassword = crypto.createHmac('sha256', user.salt)
+            .update(newPassword)
+            .digest('hex');
+
+        if (user.password === hashedOldPassword) {
+            return res.status(400).json({ message: 'New password must be different from the old password' });
+        }
+        await User.updateOne(
+            { email },
+            {
+                $set: {
+                    password: hashedNewPassword,
+                    salt: salt,
+                    passwordResetToken: {}
+                }
+            }
+        );
+
+        res.status(200).json({ message: 'Password reset successfully' });
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
 module.exports = {
     handleUserSignIn,
     handleUserSignUp,
@@ -249,5 +344,8 @@ module.exports = {
     verifyEmail,
     handleGetUserProfile,
     handleChangeUsername,
-    handleChangePassword
+    handleChangePassword,
+    handleForgotPassword,
+    handleResetPassword,
+    handleVerifyOtp
 };
