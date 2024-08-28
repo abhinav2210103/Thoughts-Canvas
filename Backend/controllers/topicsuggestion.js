@@ -34,5 +34,19 @@ async function handleCreateSuggestion(req, res) {
         return res.status(500).json({ message: "Internal Server Error" });
     }
 }
+async function getSuggestionsByUser(req, res) {
+    try {
+        const userId = req.user._id;
 
-module.exports = { handleCreateSuggestion };
+        const userSuggestions = await TopicSuggestion.find({ suggestedBy: userId });
+        if (userSuggestions.length === 0) {
+            return res.status(404).json({ message: "No suggestions found for this user" });
+        }
+        return res.status(200).json({ suggestions: userSuggestions });
+    } catch (err) {
+        console.error('Error fetching suggestions:', err.message);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+module.exports = { handleCreateSuggestion,getSuggestionsByUser};
