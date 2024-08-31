@@ -1,7 +1,6 @@
 const { createHmac, randomBytes, hash } = require('crypto');
 const {Schema,model, default: mongoose} = require("mongoose");
 const { createTokenForUser } = require('../services/authentication');
-
 const userSchema = new Schema({
     fullName: {
         type:String,
@@ -39,6 +38,10 @@ const userSchema = new Schema({
     totalBlogs : {
         type: Number,
         default: 0,
+    },
+    profilePhoto: {
+        type: String,
+        default: './avatar.png',
     },
     passwordResetToken: {
         otp: String,
