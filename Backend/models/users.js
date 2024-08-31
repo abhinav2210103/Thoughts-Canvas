@@ -41,7 +41,7 @@ const userSchema = new Schema({
     },
     profilePhoto: {
         type: String,
-        default: './avatar.png',
+        default: "https://res.cloudinary.com/dufs5ty9i/image/upload/v1725126023/tytzucezfonnjwomiuth.png",
     },
     passwordResetToken: {
         otp: String,

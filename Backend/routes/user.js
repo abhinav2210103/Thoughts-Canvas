@@ -28,7 +28,7 @@ router.post('/logout', checkForAuthenticationCookie("token"), handleUserLogout);
 router.get('/profile', checkForAuthenticationCookie("token"), handleGetUserProfile);
 router.post('/resetpassword', checkForAuthenticationCookie("token"), handleChangePassword);
 router.post('/resetusername', checkForAuthenticationCookie("token"), handleChangeUsername);
+router.post('/updateProfilePhoto', checkForAuthenticationCookie("token"), upload.single('profilePhoto'), handleupdateProfilePhoto);
 router.get('/profilephoto', checkForAuthenticationCookie("token"), handlegetProfilePhoto);  
-router.post('/updateprofilephoto', checkForAuthenticationCookie("token"), upload.single('profilePhoto'), handleupdateProfilePhoto);
 
 module.exports = router;

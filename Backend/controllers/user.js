@@ -9,7 +9,7 @@ const { sendVerificationEmail } = require('../utils/emailverifiy.util');
 const { sendPasswordResetEmail } = require('../utils/otpverify.util');
 const rateLimiterEmail = require('../utils/rateLimiterEmail');
 const {emailVerificationTemplate} = require('../constants/emailVerificationTemplate');
-const { uploadOnCloudinary } = require('../utils/cloudinary');
+const { uploadOnCloudinary } = require('../utils/cloudinary.util');
 
 const baseURL = process.env.BASE_URL ||'http://localhost:8001';
 
@@ -360,18 +360,25 @@ async function handleupdateProfilePhoto(req, res) {
         }
 
         const b64 = Buffer.from(req.file.buffer).toString("base64");
+
         const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+
         const cloudinaryResponse = await uploadOnCloudinary(dataURI);
 
-        const user = await User.findById(req.user._id);
-        if (!user) {
+        const updatedUser = await User.findOneAndUpdate(
+            { _id: req.user._id },
+            { $set: { profilePhoto: cloudinaryResponse.secure_url } },
+            { new: true }
+        );
+
+        if (!updatedUser) {
             return res.status(404).json({ message: "User not found" });
         }
-
-        user.profilePhoto = cloudinaryResponse.secure_url;
-        await user.save();
-
-        return res.status(200).json({ message: "Profile photo updated successfully", profilePhoto: user.profilePhoto });
+        
+        return res.status(200).json({ 
+            message: "Profile photo updated successfully", 
+            profilePhoto: updatedUser.profilePhoto 
+        });
     } catch (err) {
         console.error('Error updating profile photo:', err.message);
         return res.status(500).json({ message: "Internal Server Error" });
