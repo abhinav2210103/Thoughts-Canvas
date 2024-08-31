@@ -9,9 +9,12 @@ const {
     handleChangeUsername,
     handleResetPassword,
     handleForgotPassword,
-    handleVerifyOtp
+    handleVerifyOtp,
+    handlegetProfilePhoto,
+    handleupdateProfilePhoto
 } = require('../controllers/user');
 const { checkForAuthenticationCookie } = require("../middlewares/authentication");
+const upload = require("../middlewares/multer");
 
 const router = express.Router();
 
@@ -25,5 +28,7 @@ router.post('/logout', checkForAuthenticationCookie("token"), handleUserLogout);
 router.get('/profile', checkForAuthenticationCookie("token"), handleGetUserProfile);
 router.post('/resetpassword', checkForAuthenticationCookie("token"), handleChangePassword);
 router.post('/resetusername', checkForAuthenticationCookie("token"), handleChangeUsername);
+router.get('/profilephoto', checkForAuthenticationCookie("token"), handlegetProfilePhoto);  
+router.post('/updateprofilephoto', checkForAuthenticationCookie("token"), upload.single('profilePhoto'), handleupdateProfilePhoto);
 
 module.exports = router;

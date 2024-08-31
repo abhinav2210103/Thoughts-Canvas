@@ -378,6 +378,18 @@ async function handleupdateProfilePhoto(req, res) {
     }
 }
 
+async function handlegetProfilePhoto(req, res) {
+    try {
+        const user = await User.findById(req.user._id).select('profilePhoto');
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        return res.status(200).json({ profilePhoto: user.profilePhoto });
+    } catch (err) {
+        console.error('Error fetching profile photo:', err.message);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+}
 
 module.exports = {
     handleUserSignIn,
@@ -391,5 +403,5 @@ module.exports = {
     handleResetPassword,
     handleVerifyOtp,
     handleupdateProfilePhoto,
-
+    handlegetProfilePhoto,
 };
