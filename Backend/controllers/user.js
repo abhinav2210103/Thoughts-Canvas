@@ -9,6 +9,7 @@ const { sendVerificationEmail } = require('../utils/emailverifiy.util');
 const { sendPasswordResetEmail } = require('../utils/otpverify.util');
 const rateLimiterEmail = require('../utils/rateLimiterEmail');
 const {emailVerificationTemplate} = require('../constants/emailVerificationTemplate');
+const { uploadOnCloudinary } = require('../utils/cloudinary.util');
 
 const baseURL = process.env.BASE_URL ||'http://localhost:8001';
 
@@ -348,6 +349,55 @@ async function handleResetPassword(req, res) {
     }
 }
 
+async function handleupdateProfilePhoto(req, res) {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        if (req.file.size > 500 * 1024) { 
+            return res.status(400).json({ message: "File size should be less than 500KB." });
+        }
+
+        const b64 = Buffer.from(req.file.buffer).toString("base64");
+
+        const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+
+        const cloudinaryResponse = await uploadOnCloudinary(dataURI);
+
+        const updatedUser = await User.findOneAndUpdate(
+            { _id: req.user._id },
+            { $set: { profilePhoto: cloudinaryResponse.secure_url } },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        
+        return res.status(200).json({ 
+            message: "Profile photo updated successfully", 
+            profilePhoto: updatedUser.profilePhoto 
+        });
+    } catch (err) {
+        console.error('Error updating profile photo:', err.message);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+async function handlegetProfilePhoto(req, res) {
+    try {
+        const user = await User.findById(req.user._id).select('profilePhoto');
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        return res.status(200).json({ profilePhoto: user.profilePhoto });
+    } catch (err) {
+        console.error('Error fetching profile photo:', err.message);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
 module.exports = {
     handleUserSignIn,
     handleUserSignUp,
@@ -358,5 +408,7 @@ module.exports = {
     handleChangePassword,
     handleForgotPassword,
     handleResetPassword,
-    handleVerifyOtp
+    handleVerifyOtp,
+    handleupdateProfilePhoto,
+    handlegetProfilePhoto,
 };
