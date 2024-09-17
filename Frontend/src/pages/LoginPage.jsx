@@ -1,3 +1,7 @@
+/*
+  Frontend only for testing backend. This backend is primarily for the application Opinio 
+  (GitHub repo is available) and not for this frontend. Used for admin purpose also.
+*/
 import React, { useState } from 'react';
 import axios from 'axios';
 import {
@@ -32,13 +36,15 @@ const LoginComponent = () => {
         return;
       }
       const gRecaptchaToken = await executeRecaptcha('Login');
-      const response = await axios.post(`${apiBaseUrl}/admin/signin`, { email, password, gRecaptchaToken }, { withCredentials: true });
+      const response = await axios.post(`${apiBaseUrl}/user/signin`, { email, password }, { withCredentials: true });
+      console.log(apiBaseUrl);
       console.log(response.data);
       setEmail('');
       setPassword('');
       navigate('/home');
     } catch (error) {
       console.error('Login error:', error);
+      console.error('Response error data:', error.response.data);
     }
   };
 

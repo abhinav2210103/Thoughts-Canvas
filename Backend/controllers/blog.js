@@ -5,56 +5,67 @@ const NodeCache = require("node-cache");
 
 const blogCache = new NodeCache({ stdTTL: 200 });
 const likeCache = new NodeCache({ stdTTL: 200 }); 
-
 async function handleAddNewBlog(req, res) {
-  const {thoughts} = req.body;
+  const { thoughts } = req.body;
   const userId = req.user._id;
-
   try {
     const currentTopic = await Topic.findOne({ isCurrent: true });
-
     if (!currentTopic) {
       return res.status(404).json({ error: "No current topic found" });
     }
-
     const blog = await Blog.create({
       createdBy: userId,
       topic: currentTopic._id,
       topicName: currentTopic.TopicName,
       thoughts,
     });
-    
+
+    const populatedBlog = await Blog.findById(blog._id)
+      .populate('createdBy', 'fullName') 
+      .exec();
     blogCache.del("allBlogs");
-    return res.json({ msg: "Blog entry added", blog });
+    const io = req.app.get("socket");
+    io.emit("newBlog", populatedBlog); 
+
+    return res.json({ msg: "Blog entry added", blog: populatedBlog });
   } catch (error) {
-    console.error("Error adding blog entry:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    console.error("Error adding blog entry:", error.message, error.stack);
+    return res.status(500).json({ error: "Internal Server Error", message: error.message, stack: error.stack });
   }
 }
 
 async function handleGetAllBlogs(req, res) {
+
   try {
     const cachedBlogs = blogCache.get("allBlogs");
     if (cachedBlogs) {
       return res.json({ blogs: cachedBlogs });
     }
+
     const currentTopic = await Topic.findOne({ isCurrent: true });
     if (!currentTopic) {
       return res.status(404).json({ error: "No current topic found" });
     }
+
     const blogs = await Blog.find({ topic: currentTopic._id }).populate({
       path: "createdBy",
       select: "fullName",
     }).lean();
-    
-    console.log(blogs);
+
+
     blogCache.set("allBlogs", blogs);
+
+    const io = req.app.get("socket");
+    io.emit("allBlogs", blogs);  
+
     return res.json({ blogs });
-    } catch (error) {
+  } catch (error) {
     console.error("Error fetching blogs:", error);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 }
+
+
 async function handleLikeCount(req, res) {
   try {
     const blogId = req.params.id;
