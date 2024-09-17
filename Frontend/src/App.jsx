@@ -1,3 +1,7 @@
+/*
+  Frontend only for testing backend. This backend is primarily for the application Opinio 
+  (GitHub repo is available) and not for this frontend. Used for admin purpose also.
+*/
 import { useState } from 'react'
 import LoginPage from './pages/LoginPage'
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
