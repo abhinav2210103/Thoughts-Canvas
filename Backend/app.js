@@ -18,7 +18,7 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173","https://thoughts-canvas.vercel.app"],
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -37,7 +37,7 @@ connectMongoDB(process.env.MONGO_URL).then(() =>
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin:  ["http://localhost:5173","https://thoughts-canvas.vercel.app"],
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization", "origin"],
     credentials: true,
