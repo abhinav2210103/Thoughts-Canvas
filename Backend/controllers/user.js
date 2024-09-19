@@ -100,7 +100,11 @@ async function handleUserSignIn(req, res) {
         }
 
         console.log('Token', token);
-        return res.cookie('token', token, { httpOnly: true }).json({ msg: 'User Logged In' });
+        return res.cookie('token', token, { 
+            httpOnly: true, 
+            sameSite: 'None',
+            secure: true       
+          }).json({ msg: 'User Logged In' });
 
     } catch (error) {
         console.error('Error during user sign-in:', error);
