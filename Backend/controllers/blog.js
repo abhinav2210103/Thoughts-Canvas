@@ -65,27 +65,6 @@ async function handleGetAllBlogs(req, res) {
   }
 }
 
-
-async function handleLikeCount(req, res) {
-  try {
-    const blogId = req.params.id;
-
-    const blog = await Blog.findByIdAndUpdate(
-      blogId,
-      { $inc: { likesCount: 1 } },
-      { new: true }
-    ).exec();
-
-    if (!blog) return res.status(404).json({ message: 'Blog not found' });
-
-    likeCache.set(blogId, blog.likesCount);
-
-    res.status(200).json({ message: 'Blog liked successfully', likesCount: blog.likesCount });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-}
-
 async function handleGetAllLike(req, res) {
   try {
     const blogId = req.params.id;
@@ -106,17 +85,46 @@ async function handleGetAllLike(req, res) {
   }
 }
 
+async function handleLikeCount(req, res) {
+  try {
+    const blogId = req.params.id;
+    const userId = req.user._id; 
+
+    const blog = await Blog.findById(blogId);
+
+    if (!blog) return res.status(404).json({ message: 'Blog not found' });
+
+    if (blog.likedBy.includes(userId)) {
+      return res.status(400).json({ message: 'You have already liked this blog' });
+    }
+    blog.likesCount += 1;
+    blog.likedBy.push(userId);
+
+    await blog.save();
+    likeCache.set(blogId, blog.likesCount);
+    res.status(200).json({ message: 'Blog liked successfully', likesCount: blog.likesCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
 async function handleUnLikeCount(req, res) {
   try {
     const blogId = req.params.id;
+    const userId = req.user._id;  
 
-    const blog = await Blog.findByIdAndUpdate(
-      blogId,
-      { $inc: { likesCount: -1 } },
-      { new: true }
-    ).exec();
+    const blog = await Blog.findById(blogId);
 
     if (!blog) return res.status(404).json({ message: 'Blog not found' });
+
+    if (!blog.likedBy.includes(userId)) {
+      return res.status(400).json({ message: 'You have not liked this blog' });
+    }
+
+    blog.likesCount -= 1;
+    blog.likedBy = blog.likedBy.filter((id) => id.toString() !== userId.toString());
+
+    await blog.save();
 
     likeCache.set(blogId, blog.likesCount);
 
