@@ -47,6 +47,10 @@ const userSchema = new Schema({
         otp: String,
         expiration: Date,
     },
+    likedBlogs: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'blog',
+    }],
 },{timestamps:true});
 
 userSchema.pre("save",function(next){

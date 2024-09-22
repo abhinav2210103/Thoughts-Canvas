@@ -67,19 +67,12 @@ async function handleGetAllBlogs(req, res) {
 
 async function handleGetAllLike(req, res) {
   try {
-    const blogId = req.params.id;
-    const cachedLikes = likeCache.get(blogId);
-
-    if (cachedLikes !== undefined) {
-      return res.status(200).json({ likesCount: cachedLikes });
+    const userId = req.user._id; 
+    const user = await User.findById(userId).select('likedBlogs').populate('likedBlogs');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-
-    const blog = await Blog.findById(blogId);
-    if (!blog) return res.status(404).json({ message: 'Blog not found' });
-
-    likeCache.set(blogId, blog.likesCount);
-
-    res.status(200).json({ likesCount: blog.likesCount });
+    res.json({ likedBlogs: user.likedBlogs });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
