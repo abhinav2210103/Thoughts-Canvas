@@ -84,17 +84,24 @@ async function handleLikeCount(req, res) {
     const userId = req.user._id; 
 
     const blog = await Blog.findById(blogId);
+    const user = await User.findById(userId);
 
     if (!blog) return res.status(404).json({ message: 'Blog not found' });
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (blog.likedBy.includes(userId)) {
       return res.status(400).json({ message: 'You have already liked this blog' });
     }
+
     blog.likesCount += 1;
     blog.likedBy.push(userId);
+    user.likedBlogs.push(blogId);
 
     await blog.save();
+    await user.save();
+
     likeCache.set(blogId, blog.likesCount);
+
     res.status(200).json({ message: 'Blog liked successfully', likesCount: blog.likesCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -107,8 +114,10 @@ async function handleUnLikeCount(req, res) {
     const userId = req.user._id;  
 
     const blog = await Blog.findById(blogId);
+    const user = await User.findById(userId);
 
     if (!blog) return res.status(404).json({ message: 'Blog not found' });
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (!blog.likedBy.includes(userId)) {
       return res.status(400).json({ message: 'You have not liked this blog' });
@@ -116,8 +125,10 @@ async function handleUnLikeCount(req, res) {
 
     blog.likesCount -= 1;
     blog.likedBy = blog.likedBy.filter((id) => id.toString() !== userId.toString());
+    user.likedBlogs = user.likedBlogs.filter((id) => id.toString() !== blogId.toString());
 
     await blog.save();
+    await user.save();
 
     likeCache.set(blogId, blog.likesCount);
 
@@ -126,6 +137,7 @@ async function handleUnLikeCount(req, res) {
     res.status(500).json({ message: error.message });
   }
 }
+
 
 module.exports = {
   handleAddNewBlog,
