@@ -5,6 +5,8 @@ const NodeCache = require("node-cache");
 
 const blogCache = new NodeCache({ stdTTL: 200 });
 const likeCache = new NodeCache({ stdTTL: 200 }); 
+
+
 async function handleAddNewBlog(req, res) {
   const { thoughts } = req.body;
   const userId = req.user._id;
@@ -81,62 +83,92 @@ async function handleGetAllLike(req, res) {
 async function handleLikeCount(req, res) {
   try {
     const blogId = req.params.id;
-    const userId = req.user._id; 
+    const userId = req.user._id;
 
     const blog = await Blog.findById(blogId);
     const user = await User.findById(userId);
 
-    if (!blog) return res.status(404).json({ message: 'Blog not found' });
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!blog) {
+      return res.status(404).json({ message: 'Blog not found' });
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
     if (blog.likedBy.includes(userId)) {
       return res.status(400).json({ message: 'You have already liked this blog' });
     }
 
-    blog.likesCount += 1;
-    blog.likedBy.push(userId);
-    user.likedBlogs.push(blogId);
+    await Blog.updateOne(
+      { _id: blogId },
+      {
+        $inc: { likesCount: 1 },
+        $push: { likedBy: userId },
+      }
+    );
 
-    await blog.save();
-    await user.save();
+    await User.updateOne(
+      { _id: userId },
+      {
+        $push: { likedBlogs: blogId },
+      }
+    );
 
-    likeCache.set(blogId, blog.likesCount);
+    likeCache.set(blogId, blog.likesCount + 1);
 
-    res.status(200).json({ message: 'Blog liked successfully', likesCount: blog.likesCount });
+    res.status(200).json({ message: 'Blog liked successfully', likesCount: blog.likesCount + 1 });
   } catch (error) {
+    console.error('Error liking blog:', error);
     res.status(500).json({ message: error.message });
   }
 }
 
-async function handleUnLikeCount(req, res) {
+
+async function handleUnlikeCount(req, res) {
   try {
     const blogId = req.params.id;
-    const userId = req.user._id;  
+    const userId = req.user._id;
 
     const blog = await Blog.findById(blogId);
     const user = await User.findById(userId);
 
-    if (!blog) return res.status(404).json({ message: 'Blog not found' });
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    if (!blog.likedBy.includes(userId)) {
-      return res.status(400).json({ message: 'You have not liked this blog' });
+    if (!blog) {
+      return res.status(404).json({ message: 'Blog not found' });
     }
 
-    blog.likesCount -= 1;
-    blog.likedBy = blog.likedBy.filter((id) => id.toString() !== userId.toString());
-    user.likedBlogs = user.likedBlogs.filter((id) => id.toString() !== blogId.toString());
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-    await blog.save();
-    await user.save();
+    if (!blog.likedBy.includes(userId)) {
+      return res.status(400).json({ message: 'You have not liked this blog yet' });
+    }
 
-    likeCache.set(blogId, blog.likesCount);
+    await Blog.updateOne(
+      { _id: blogId },
+      {
+        $inc: { likesCount: -1 },
+        $pull: { likedBy: userId },
+      }
+    );
 
-    res.status(200).json({ message: 'Blog unliked successfully', likesCount: blog.likesCount });
+    await User.updateOne(
+      { _id: userId },
+      {
+        $pull: { likedBlogs: blogId },
+      }
+    );
+
+    likeCache.set(blogId, blog.likesCount - 1);
+
+    res.status(200).json({ message: 'Blog unliked successfully', likesCount: blog.likesCount - 1 });
   } catch (error) {
+    console.error('Error unliking blog:', error);
     res.status(500).json({ message: error.message });
   }
 }
+
 
 
 module.exports = {
@@ -144,5 +176,5 @@ module.exports = {
   handleGetAllBlogs,
   handleGetAllLike,
   handleLikeCount,
-  handleUnLikeCount
+  handleUnlikeCount
 };
