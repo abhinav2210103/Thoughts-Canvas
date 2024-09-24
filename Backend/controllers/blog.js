@@ -5,6 +5,8 @@ const NodeCache = require("node-cache");
 
 const blogCache = new NodeCache({ stdTTL: 200 });
 const likeCache = new NodeCache({ stdTTL: 200 }); 
+
+
 async function handleAddNewBlog(req, res) {
   const { thoughts } = req.body;
   const userId = req.user._id;
@@ -65,71 +67,114 @@ async function handleGetAllBlogs(req, res) {
   }
 }
 
+async function handleGetAllLike(req, res) {
+  try {
+    const userId = req.user._id; 
+    const user = await User.findById(userId).select('likedBlogs').populate('likedBlogs');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ likedBlogs: user.likedBlogs });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
 
 async function handleLikeCount(req, res) {
   try {
     const blogId = req.params.id;
-
-    const blog = await Blog.findByIdAndUpdate(
-      blogId,
-      { $inc: { likesCount: 1 } },
-      { new: true }
-    ).exec();
-
-    if (!blog) return res.status(404).json({ message: 'Blog not found' });
-
-    likeCache.set(blogId, blog.likesCount);
-
-    res.status(200).json({ message: 'Blog liked successfully', likesCount: blog.likesCount });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-}
-
-async function handleGetAllLike(req, res) {
-  try {
-    const blogId = req.params.id;
-    const cachedLikes = likeCache.get(blogId);
-
-    if (cachedLikes !== undefined) {
-      return res.status(200).json({ likesCount: cachedLikes });
-    }
+    const userId = req.user._id;
 
     const blog = await Blog.findById(blogId);
-    if (!blog) return res.status(404).json({ message: 'Blog not found' });
+    const user = await User.findById(userId);
 
-    likeCache.set(blogId, blog.likesCount);
+    if (!blog) {
+      return res.status(404).json({ message: 'Blog not found' });
+    }
 
-    res.status(200).json({ likesCount: blog.likesCount });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (blog.likedBy.includes(userId)) {
+      return res.status(400).json({ message: 'You have already liked this blog' });
+    }
+
+    await Blog.updateOne(
+      { _id: blogId },
+      {
+        $inc: { likesCount: 1 },
+        $push: { likedBy: userId },
+      }
+    );
+
+    await User.updateOne(
+      { _id: userId },
+      {
+        $push: { likedBlogs: blogId },
+      }
+    );
+
+    likeCache.set(blogId, blog.likesCount + 1);
+
+    res.status(200).json({ message: 'Blog liked successfully', likesCount: blog.likesCount + 1 });
   } catch (error) {
+    console.error('Error liking blog:', error);
     res.status(500).json({ message: error.message });
   }
 }
 
-async function handleUnLikeCount(req, res) {
+
+async function handleUnlikeCount(req, res) {
   try {
     const blogId = req.params.id;
+    const userId = req.user._id;
 
-    const blog = await Blog.findByIdAndUpdate(
-      blogId,
-      { $inc: { likesCount: -1 } },
-      { new: true }
-    ).exec();
+    const blog = await Blog.findById(blogId);
+    const user = await User.findById(userId);
 
-    if (!blog) return res.status(404).json({ message: 'Blog not found' });
+    if (!blog) {
+      return res.status(404).json({ message: 'Blog not found' });
+    }
 
-    likeCache.set(blogId, blog.likesCount);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-    res.status(200).json({ message: 'Blog unliked successfully', likesCount: blog.likesCount });
+    if (!blog.likedBy.includes(userId)) {
+      return res.status(400).json({ message: 'You have not liked this blog yet' });
+    }
+
+    await Blog.updateOne(
+      { _id: blogId },
+      {
+        $inc: { likesCount: -1 },
+        $pull: { likedBy: userId },
+      }
+    );
+
+    await User.updateOne(
+      { _id: userId },
+      {
+        $pull: { likedBlogs: blogId },
+      }
+    );
+
+    likeCache.set(blogId, blog.likesCount - 1);
+
+    res.status(200).json({ message: 'Blog unliked successfully', likesCount: blog.likesCount - 1 });
   } catch (error) {
+    console.error('Error unliking blog:', error);
     res.status(500).json({ message: error.message });
   }
 }
+
+
 
 module.exports = {
   handleAddNewBlog,
   handleGetAllBlogs,
   handleGetAllLike,
   handleLikeCount,
-  handleUnLikeCount
+  handleUnlikeCount
 };

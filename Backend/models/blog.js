@@ -18,7 +18,12 @@ const blogSchema = new mongoose.Schema({
   thoughts: {
     type: String,
     required: true,
+    maxlength: 500,
   },
+  likedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user',
+  }],
   likesCount: {
     type: Number,
     default: 0,
