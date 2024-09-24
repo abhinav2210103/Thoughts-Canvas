@@ -49,10 +49,10 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.use("/user", userRouter);
+app.use("/admin", adminRouter);
 app.use(checkForAuthenticationCookie("token"));
 app.use("/blog", blogRouter);
 app.use("/topic", topicRouter);
-app.use("/admin", adminRouter);
 app.use("/comment", commentRouter);
 
 httpServer.listen(PORT, () =>
