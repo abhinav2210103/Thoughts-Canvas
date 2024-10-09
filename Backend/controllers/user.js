@@ -59,7 +59,7 @@ async function handleUserSignUp(req, res) {
         const verificationLink = `${baseURL}/user/verifyEmail?token=${token}`;
         const newUser = new User({
             fullName,
-            email,
+            email : normalizedEmail,
             password,
             isVerified: false,
             verificationToken: {
