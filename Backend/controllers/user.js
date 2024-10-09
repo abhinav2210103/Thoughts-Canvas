@@ -34,7 +34,7 @@ async function handleUserSignUp(req, res) {
             } else {
                 if (existingUser.verificationToken.expiration < Date.now()) {
                     const newToken = crypto.randomBytes(20).toString('hex');
-                    await User.updateOne({ email: email }, {
+                    await User.updateOne({ email: normalizedEmail }, {
                         $set: {
                             verificationToken: {
                                 token: newToken,
@@ -43,7 +43,7 @@ async function handleUserSignUp(req, res) {
                         }
                     });
                     const verificationLink = `${baseURL}/user/verifyEmail?token=${newToken}`;
-                    await sendVerificationEmail(email, verificationLink, fullName);
+                    await sendVerificationEmail(normalizedEmail, verificationLink, fullName);
                     return res.status(200).json({
                         message: 'Verification email resent. Please check your inbox.'
                     });
@@ -69,7 +69,7 @@ async function handleUserSignUp(req, res) {
         });
 
         await newUser.save();
-        await sendVerificationEmail(email, verificationLink, fullName);
+        await sendVerificationEmail(normalizedEmail, verificationLink, fullName);
 
         res.status(201).json({
             success: true,
