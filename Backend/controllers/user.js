@@ -26,7 +26,8 @@ async function handleUserSignUp(req, res) {
         }
 
         const { fullName, email, password } = req.body;
-        const existingUser = await User.findOne({ email });
+        const normalizedEmail = email.toLowerCase(); 
+        const existingUser = await User.findOne({ email: normalizedEmail });
         if (existingUser) {
             if (existingUser.isVerified) {
                 return res.status(400).json({ message: 'Email already in use' });
@@ -82,7 +83,7 @@ async function handleUserSignUp(req, res) {
 
 async function handleUserSignIn(req, res) {
     const { email, password, gRecaptchatoken } = req.body;
-
+    const normalizedEmail = email.toLowerCase();
     try {
         // const reCaptchaResponse = await verifyRecaptchaToken(gRecaptchatoken);
 
@@ -91,9 +92,9 @@ async function handleUserSignIn(req, res) {
         //     return res.status(403).json({ error: 'ReCaptcha verification failed' });
         // }
 
-        const token = await User.matchPasswordAndGenerateToken(email, password);
+        const token = await User.matchPasswordAndGenerateToken(normalizedEmail, password);
         
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: normalizedEmail });
 
         if (!user.isVerified) {
             return res.status(403).json({ error: 'Email not verified. Please check your inbox for the verification email or request a new one.' });
