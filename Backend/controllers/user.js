@@ -252,7 +252,7 @@ async function handleChangePassword(req, res) {
 }
 
 async function handleForgotPassword(req, res) {
-    const { email } = req.body;
+    const email = req.body.email.toLowerCase();    
     try {
         const rateLimit = await rateLimiterEmail(email, 3, 86400);
         if (!rateLimit.allowed) {
@@ -295,7 +295,8 @@ async function handleForgotPassword(req, res) {
 }
 
 async function handleVerifyOtp(req, res) {
-    const { email, otp } = req.body;
+    const email = req.body.email.toLowerCase();
+    const { otp } = req.body;
 
     try {
         const user = await User.findOne({ email });
@@ -311,7 +312,8 @@ async function handleVerifyOtp(req, res) {
     }
 }
 async function handleResetPassword(req, res) {
-    const { email, otp, newPassword } = req.body;
+    const email = req.body.email.toLowerCase();
+    const {  otp, newPassword } = req.body;
 
     try {
         const user = await User.findOne({ email });
