@@ -26,14 +26,15 @@ async function handleUserSignUp(req, res) {
         }
 
         const { fullName, email, password } = req.body;
-        const existingUser = await User.findOne({ email });
+        const normalizedEmail = email.toLowerCase(); 
+        const existingUser = await User.findOne({ email: normalizedEmail });
         if (existingUser) {
             if (existingUser.isVerified) {
                 return res.status(400).json({ message: 'Email already in use' });
             } else {
                 if (existingUser.verificationToken.expiration < Date.now()) {
                     const newToken = crypto.randomBytes(20).toString('hex');
-                    await User.updateOne({ email: email }, {
+                    await User.updateOne({ email: normalizedEmail }, {
                         $set: {
                             verificationToken: {
                                 token: newToken,
@@ -42,7 +43,7 @@ async function handleUserSignUp(req, res) {
                         }
                     });
                     const verificationLink = `${baseURL}/user/verifyEmail?token=${newToken}`;
-                    await sendVerificationEmail(email, verificationLink, fullName);
+                    await sendVerificationEmail(normalizedEmail, verificationLink, fullName);
                     return res.status(200).json({
                         message: 'Verification email resent. Please check your inbox.'
                     });
@@ -58,7 +59,7 @@ async function handleUserSignUp(req, res) {
         const verificationLink = `${baseURL}/user/verifyEmail?token=${token}`;
         const newUser = new User({
             fullName,
-            email,
+            email : normalizedEmail,
             password,
             isVerified: false,
             verificationToken: {
@@ -68,7 +69,7 @@ async function handleUserSignUp(req, res) {
         });
 
         await newUser.save();
-        await sendVerificationEmail(email, verificationLink, fullName);
+        await sendVerificationEmail(normalizedEmail, verificationLink, fullName);
 
         res.status(201).json({
             success: true,
@@ -82,7 +83,7 @@ async function handleUserSignUp(req, res) {
 
 async function handleUserSignIn(req, res) {
     const { email, password, gRecaptchatoken } = req.body;
-
+    const normalizedEmail = email.toLowerCase();
     try {
         // const reCaptchaResponse = await verifyRecaptchaToken(gRecaptchatoken);
 
@@ -91,9 +92,9 @@ async function handleUserSignIn(req, res) {
         //     return res.status(403).json({ error: 'ReCaptcha verification failed' });
         // }
 
-        const token = await User.matchPasswordAndGenerateToken(email, password);
+        const token = await User.matchPasswordAndGenerateToken(normalizedEmail, password);
         
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: normalizedEmail });
 
         if (!user.isVerified) {
             return res.status(403).json({ error: 'Email not verified. Please check your inbox for the verification email or request a new one.' });
@@ -251,7 +252,7 @@ async function handleChangePassword(req, res) {
 }
 
 async function handleForgotPassword(req, res) {
-    const { email } = req.body;
+    const email = req.body.email.toLowerCase();    
     try {
         const rateLimit = await rateLimiterEmail(email, 3, 86400);
         if (!rateLimit.allowed) {
@@ -294,7 +295,8 @@ async function handleForgotPassword(req, res) {
 }
 
 async function handleVerifyOtp(req, res) {
-    const { email, otp } = req.body;
+    const email = req.body.email.toLowerCase();
+    const { otp } = req.body;
 
     try {
         const user = await User.findOne({ email });
@@ -310,7 +312,8 @@ async function handleVerifyOtp(req, res) {
     }
 }
 async function handleResetPassword(req, res) {
-    const { email, otp, newPassword } = req.body;
+    const email = req.body.email.toLowerCase();
+    const {  otp, newPassword } = req.body;
 
     try {
         const user = await User.findOne({ email });
