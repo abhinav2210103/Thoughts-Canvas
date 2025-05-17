@@ -55,6 +55,6 @@ app.use("/blog", blogRouter);
 app.use("/topic", topicRouter);
 app.use("/comment", commentRouter);
 
-httpServer.listen(PORT, () =>
+httpServer.listen(PORT, '0.0.0.0', () =>
   console.log(`Server started and listening on port ${PORT}`)
 );
