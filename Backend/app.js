@@ -17,7 +17,7 @@ const app = express();
 const httpServer = createServer(app);
 
 app.get('/ping', (req, res) => {
-  res.json({ message: 'ponnng' });
+res.json({ message: 'pong from CI/CD' });
 });
 
 const io = new Server(httpServer, {
