@@ -16,9 +16,8 @@ const PORT = process.env.PORT || 8000;
 const app = express();
 const httpServer = createServer(app);
 
-// 🔧 Public health check route
 app.get('/ping', (req, res) => {
-  res.json({ message: 'pong' });
+  res.json({ message: 'ponnng' });
 });
 
 const io = new Server(httpServer, {
